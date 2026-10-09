@@ -10,20 +10,41 @@ DEFAULT_PALETTE = [(90, 160, 220), (190, 120, 70), (100, 210, 140)]
 KEY_HOPS = {pygame.K_LEFT: (-1, -1), pygame.K_UP: (-1, 0), pygame.K_DOWN: (1, 0), pygame.K_RIGHT: (1, 1)}
 
 
+LEVEL_PALETTES = [
+    [(90, 160, 220), (190, 120, 70), (100, 210, 140)],   # level 1: blue -> orange -> green
+    [(120, 90, 200), (240, 170, 60), (240, 90, 140)],    # level 2: purple -> amber -> pink
+    [(60, 150, 140), (230, 200, 70), (220, 70, 70)],     # level 3: teal -> yellow -> red
+    [(200, 200, 210), (90, 130, 230), (250, 130, 40)],   # level 4: grey -> blue -> orange
+]
+
+
 def cube_palette(level):
     """Return a list of TARGET + 1 (r, g, b) colours for the cube stages, or None for the default."""
-    pass
+    return LEVEL_PALETTES[(level - 1) % len(LEVEL_PALETTES)]
+
+
+FLASH_TIME = 0.4
+COMPLETE_BONUS = 50
+flashes = {}          # cell -> seconds of flash remaining
+pending_bonus = [0]   # points waiting to be added to the score by Game.update
 
 
 def on_cube_completed(cell):
     """Called when a cube first reaches its target colour; add a flash, sound, or bonus here."""
-    pass
+    flashes[cell] = FLASH_TIME
+    pending_bonus[0] += COMPLETE_BONUS
+
+
+def tick_flashes(dt):
+    for cell in list(flashes):
+        flashes[cell] -= dt
+        if flashes[cell] <= 0:
+            del flashes[cell]
 
 
 def bonus_life_threshold():
     """Return a score value at which the player earns an extra life, or None to disable bonus lives."""
-    pass
-
+    return 1000
 
 
 def cube_center(row, col):
@@ -88,6 +109,8 @@ class Game:
             self.level, self.score, self.lives = 1, 0, 3
             self.bonus_awarded = 0
         self.stages = {cell: 0 for cell in CELLS}
+        flashes.clear()
+        pending_bonus[0] = 0
         self.state = "play"
         self.respawn()
 
@@ -128,11 +151,14 @@ class Game:
             self.respawn()
 
     def update(self, dt):
+        tick_flashes(dt)
         if self.state != "play":
             return
         landed = self.player.update(dt)
         if landed:
             self.paint(landed)
+            self.score += pending_bonus[0]
+            pending_bonus[0] = 0
         threshold = bonus_life_threshold()
         if threshold and self.score // threshold > self.bonus_awarded:
             self.bonus_awarded = self.score // threshold
@@ -168,6 +194,9 @@ class Game:
         cx, cy = cube_center(*cell)
         top = [(cx, cy - CUBE_H / 2), (cx + CUBE_W / 2, cy), (cx, cy + CUBE_H / 2), (cx - CUBE_W / 2, cy)]
         color = colors[self.stages[cell]]
+        if cell in flashes:
+            mix = flashes[cell] / FLASH_TIME
+            color = tuple(int(v + (255 - v) * mix) for v in color)
         left = [top[3], top[2], (cx, cy + CUBE_H / 2 + SIDE), (cx - CUBE_W / 2, cy + SIDE)]
         right = [top[1], top[2], (cx, cy + CUBE_H / 2 + SIDE), (cx + CUBE_W / 2, cy + SIDE)]
         pygame.draw.polygon(screen, shade(DEFAULT_PALETTE[0], 0.45), left)
