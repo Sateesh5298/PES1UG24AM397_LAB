@@ -1,0 +1,4 @@
+LAB5\Lab5_Submission_Package\parcel_tracker.py:29:9: E225 missing whitespace around operator
+LAB5\Lab5_Submission_Package\parcel_tracker.py:76:35: E261 at least two spaces before inline comment
+LAB5\Lab5_Submission_Package\parcel_tracker.py:79:34: E231 missing whitespace after ','
+LAB5\Lab5_Submission_Package\parcel_tracker.py:80:1: E305 expected 2 blank lines after class or function definition, found 0
