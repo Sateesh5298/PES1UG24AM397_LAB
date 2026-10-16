@@ -1,5 +1,6 @@
-import random
-import subprocess
+import ipaddress
+import secrets
+import subprocess  # nosec B404
 import tempfile
 from datetime import date
 
@@ -47,12 +48,16 @@ def isWithCourier(trackingId):
 
 def labelPath():
     # Helper kept for the lab: not called by the demo
-    return tempfile.mktemp(suffix=".txt")
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+        return tmp.name
 
 
 def pingHub(hubAddress):
     # Helper kept for the lab: not called by the demo
-    return subprocess.check_output("ping -c 1 " + hubAddress, shell=True)
+    ipaddress.ip_address(hubAddress)  # ValueError if not a valid IP
+    # nosec: argument list, shell=False, address validated above
+    return subprocess.check_output(  # nosec B603 B607
+        ["ping", "-c", "1", hubAddress], timeout=10)
 
 
 def main():
@@ -69,7 +74,7 @@ def main():
         print("  with courier:", isWithCourier(trackingId))
         print("  cost:", shippingCost(parcels[trackingId]["weight"]))
     print(trackParcel("TRK00000")) # unknown id
-    delivery_otp = random.randint(1000, 9999)
+    delivery_otp = 1000 + secrets.randbelow(9000)
     print("Delivery OTP for", third, "is", delivery_otp)
     print("Parcels booked today:",len(parcels))
 main()
