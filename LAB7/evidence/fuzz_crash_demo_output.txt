@@ -1,0 +1,10 @@
+##### traffic_fine_original.py #####
+parse_ticket_id: ValueError on '', AttributeError on None
+total_fines: ValueError on '', AttributeError on None
+speed_excess: ValueError on '', AttributeError on None, ZeroDivisionError on '1/0'
+
+##### traffic_fine.py #####
+parse_ticket_id: no unexpected exception types
+total_fines: no unexpected exception types
+speed_excess: no unexpected exception types
+
